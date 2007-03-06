@@ -1,0 +1,74 @@
+Joining room 
+Eniras en ĉambron 
+werewolfbot
+homlupisto
+Error when joining room
+Eraro okazis dum eniro en ĉambron
+Hi, I am the werewolf bot.
+Saluton, mi estas la homlupluda roboto.
+To join the game, send 'join' to me privately.  List participants with 'who' in public.  To start the game, say 'start' in public.
+Por aliĝi al la ludo, skribu 'join' al mi private.  Listigu ludantojn skribante 'who' publike.  Por startigi la ludon, skribu 'start' publike.
+werewolf
+homlupo
+villager
+vilaĝano
+ has joined the game.
+ aliĝis al la ludo.
+You probably meant 'join'.
+Vi verŝajne celis 'join'.
+No players yet.
+Ankoraŭ neniuj ludantoj.
+Not enough players.
+Malsufiĉe da ludantoj.
+The game is starting.  Some of you are werewolves, and some of you are villagers.  The werewolves try to kill all the villagers during the night, while the villagers try to execute all the werewolves during the day.
+La ludo komenciĝas.  Iuj el vi estas homlupoj, kaj iuj estas vilaĝanoj.  La homlupoj provas mortigi ĉiujn vilaĝanojn nokte, dum la vilaĝanoj provas ekzekuti ĉiujn homlupojn dum la tago.
+You are a werewolf.  
+Vi estas homlupo.  
+There are no other werewolves.
+Estas neniuj aliaj homlupoj.
+The other werewolves are: 
+La aliaj homlupoj estas: 
+You are a villager.
+Vi estas vilaĝano.
+As the sun sets over the little village, the people realize that there is only one side left.  
+Kiam la suno subiras super la malgranda vilaĝo, la popolo ekkomprenas ke restas nur unu flanko.  
+The villagers have won!
+La vilaĝanoj venkis!
+The werewolves have won!
+La homlupoj venkis!
+The villagers, tired after the hard work in the fields, go to bed, and the sun sets.  But in the middle of the night, the werewolves wake up!
+La vilaĝanoj, lacaj pro la forta laboro sur la kampoj, iras liten, kaj la suno subiras.  Sed meze de la nokto la homlupoj vekiĝas!
+You and the other werewolves vote for a villager to kill by typing 'kill NICK' to me.
+Vi kaj la aliaj homlupoj voĉdonas pri kiun vilaĝanon mortigi skribante 'kill NOMO' al mi.
+A scream of pain and agony is heard!
+Aŭdiĝas krio de doloro kaj angoro!
+ has been devoured by the werewolves.
+ estis manĝita de la homlupoj.
+You are not a werewolf.  You are supposed to be sleeping!
+Vi ne estas homlupo.  Vi devus dormi!
+Werewolves:
+Homlupoj:
+Villagers:
+Vilaĝanoj:
+Votes:
+Voĉdonoj:
+Noone has voted yet.
+Ankoraŭ neniu voĉdonis.
+ is not a villager.
+ ne estas vilaĝano.
+ has voted to kill 
+ voĉdonis por mortigi 
+I don't understand that.
+Mi ne komprenas tion.
+As the sun rises over the little village, the people realize that there is only one side left.  
+Kiam la suno supreniras super la malgranda vilaĝo, la popolo ekkomprenas ke restas nur unu flanko.  
+The villagers are outraged over this crime, and want to execute somebody.  They gather in the town square to vote about whom to kill.  Type 'kill NICK' in public to vote.
+La vilaĝanoj koleregas pri ĉi tiu krimo, kaj volas iun ekzekuti.  Ili ariĝas sur la placo por voĉdoni pri kiun mortigi.  Skribu 'kill NOMO' publike por voĉdoni.
+The villagers have chosen by simple majority to execute 
+La vilaĝanoj per simpla plimulto elektis ekzekuti 
+All villagers have cast their vote, but no majority has been reached.  The disgruntled villagers go home.
+Ĉiuj vilaĝanoj voĉdonis, sed plimulto ne atingiĝis.  La malkontentaj vilaĝanoj iras hejmen.
+: You are not entitled to vote.
+: Vi ne rajtas voĉdoni.
+ is not a villager.
+ ne estas vilaĝano.

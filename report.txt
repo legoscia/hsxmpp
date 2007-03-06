@@ -1,0 +1,210 @@
+Report: A Monad for Writing XMPP Clients
+Magnus Henoch
+
+The original goal of the project was to write a library for writing
+XMPP IM clients, with the flow of the program codified in an XMPP
+monad.  My idea was to completely separate the application logic from
+the actual sending and receiving of stanzas (the equivalent of
+messages or packets in other protocols), but I found that this way of
+doing it made the bind function and the run function quite
+cumbersome.  Instead I embedded the IO monad into the XMPP monad.
+Continuations (which in this context means waiting for a certain
+packet to arrive without blocking the rest of the program) were only a
+tentative part of the original plan, but turned out to be easier than
+I thought, once I succeeded in wrapping my head around it.
+
+Though my experience with the library is so far limited, it seems to
+be a nice fit for the request-response model of XMPP programming.
+Sending a request and waiting for a response in the same function is
+quite convenient, as the "polling" and response-matching is taken care
+of behind the back of the programmer.
+
+* What is XMPP?
+
+XMPP is a protocol for streaming XML defined in RFCs 3920 and 3921, so
+far mostly used for instant messaging.  Its main transport method is a
+TCP connection starting with a opening <stream> tag, and ending (after
+the session is over) with a closing </stream> tag.  Between these come
+payload elements, called stanzas.  There are three kinds of stanzas,
+<message/>, <presence/> and <iq/>.  <message/> is used for sending
+information to another entity, not necessarily with any previous
+contact.  <iq/> is used for performing a specific request; it always
+expects a response.  <presence/> is used to signal the availability of
+an entity.
+
+* XMPPConnection.hs
+
+This module contains the XMPPConnection class.  There are different
+ways to make an XMPP connection, but all of these should be able to
+implement the three methods: getStanzas (i.e. get stanzas in receive
+buffer), sendStanza, and closeConnection.
+
+* TCPConnection.hs
+
+TCPConnection is an instance of XMPPConnection, so far the only one.
+It uses the XMLParse module to be able to parse partial input.
+getStanzas is ultimately implemented in terms of getString.  I wanted
+getString to sleep until there is any input, but I found no way of
+doing that.  Instead, it checks for input once every second.
+
+* XMLParse.hs
+
+This module implements a simple XML parser.  Unlike most other XML
+parsing libraries, it doesn't require that the XML document is
+complete when starting to parse it.  In theory a SAX parser could
+satisfy this constraint, but in practice the ones I found didn't and
+are therefore unsuitable for an XMPP application.
+
+The interesting part of the parser is the getRest function.  It takes
+a parser function as an argument, attempts to parse the input with it,
+and returns the result along with the part of the input that couldn't
+be parsed.  This means that the caller doesn't have to ensure that a
+complete stanza has arrived over the network before calling the
+parser.  Unfortunately, it also means that invalid XML will not be
+reported as an error, since it is indistinguishable from incomplete
+input.  Using a real SAX parser would fix this problem; however, this
+isn't very important for an XMPP client, as it only receives data that
+has already been parsed by the server.
+
+The XML data is parsed into the XMLElem data type, which has two
+alternatives, one for XML elements and one for character data.  The
+functions getAttr and getCdata provide convenient access to various
+parts of an element.  The xmlPath function takes a list of strings and
+an element, and for each string descends to the subelement of the
+current element with that name.
+
+* XMPP.hs
+
+This module contains the XMPP monad.  The XMPP monad has two purposes:
+it hides the XMPPConnection from the application code, as it is passed
+along behind the scenes (unfortunately the type signature of the monad
+is XMPPConnection c => XMPP c, which is quite ugly); and it lets the
+application code "stop and wait" for a stanza fulfilling certain
+criteria.
+
+The latter feature is what sets my XMPP library apart from others.
+Most libraries (including mine) allow the programmer to define
+callbacks for certain events, e.g. a service discovery request.  This
+is fine for requests which only require a single response, but in the
+case of a more elaborate conversation, keeping state becomes
+necessary.  Using closures is a convenient way to keep that state.
+
+Specifically, the bind function of the XMPP monad can, depending on
+the return value of the first function, either just execute the next
+function (keeping the list of stanza handlers as a state variable), or
+package the next function as a continuation to be executed when a
+stanza fulfilling a certain criterion arrives.
+
+The actual execution of functions in the XMPP monad is done by the
+runXMPP function, which queries the given connection for new stanzas
+and calls the corresponding handlers.
+
+* Stanzas.hs
+
+This module contains helper functions that isolate common idioms.
+These are of three kinds: functions for sending stanzas, stanza
+predicates, and entire handlers for simple XMPP functions.
+
+sendMessage takes two arguments, a recipient and a message text, and
+sends the text as a chat message to the recipient.  sendPresence sends
+the simplest possible presence stanza, which tells the server that the
+client is "available".  sendIq sends an infoquery request with a
+randomly generated ID and returns that ID; in most cases sendIqWait
+would be used, as it waits for a response to the request and returns
+that response.  Finally, sendIqResponse sends a response to a received
+request.
+
+The stanza predicates are simply functions of type XMLElem -> Bool;
+some of them take additional arguments.  They can be combined with the
+conj function, which takes two predicates and returns a predicate that
+returns true if both composing predicates return true.  Most of them
+are quite self-explaining.  One combination that I've found
+particularly useful is "hasBody `conj` isFrom sender" - in a
+conversation, this gets the next message from the contact that
+actually has text in it, ignoring various meta messages.
+
+The function handleVersion implements the Software Version extension,
+through which an entity can tell the name and version of its
+implementation, and the operating system it is running on.  The
+handleVersion function thus takes these three values as arguments, and
+installs a handler for requests in the "jabber:iq:version" namespace.
+Some XMPP functions could be implemented as simply as this one, while
+others would need more integration with the rest of the program.
+
+* Auth.hs
+
+This module contains the startAuth function, which tries to
+authenticate given a username, a server and a password.  If it fails,
+it calls 'error'.
+
+This code currently sends passwords in plain text over the network.
+It should be replaced with code that authenticates using SASL.
+
+* JID.hs
+
+A JID (Jabber ID) looks like:
+
+[username@]server[/resource]
+
+The functions getUsername and getResource return the respective parts
+of the given JID, or an empty string if that part is absent.
+
+A "bare JID" is a JID without a resource.  getBareJid converts any JID
+to a bare JID.
+
+* MUC.hs
+
+MUC stands for "Multi-User Chat", an XMPP extension for IRC-like chat
+rooms.  The functions in this module provide a somewhat unpolished
+interface to such rooms.
+
+The joinGroupchat function takes a nickname and a room JID, and tries
+to join it.  If it succeeds, it returns a function that at any time
+can list the room participants; if it fails, it returns Nothing.  The
+functions isGroupchatMessage, isGroupchatPrivmsg, sendGroupchatMessage
+and sendGroupchatPrivateMessage do what their names say.
+
+This module illustrates a problem with the event model I have chosen.
+The joinGroupchat function installs a handler to register when people
+enter and leave the chatroom, so that this information is always
+available to the program, but this precludes the program from adding
+its own handler to those events.  It would be nice if the MUC module
+could somehow send its own high-level events, independent of the
+underlying stanza events.
+
+* Werewolf.hs
+
+This is the fun part, an application that uses my library.  It
+implements the "game of werewolves".  In a circle of players, some are
+werewolves in disguise.  In the night, the werewolves eat one of the
+other players, and in the day, all players choose one person to
+execute.  The game ends when only humans or only werewolves remain.
+My program implements this game in an XMPP chat room.
+
+For the reason mentioned above, the program does not keep track of
+players dropping out of the room, which means that it can get stuck,
+waiting for someone who will not come back.
+
+The program is written as a state machine, with each state represented
+by a function.  Each function performs a part of the algorithm, waits
+for input, and decides which function to call next based on the
+input.  The complexity of waiting for stanzas and deciding which ones
+belong to which stage of the conversation is nowhere to be seen.
+
+* Translate.hs
+
+This is a simple module that handles translations of strings in a
+program.  It uses text files where every entry has two lines, the
+original string and the translated string, and inserts the entire
+translation table into a hash table.  Using this module, the werewolf
+bot speaks not only English but also Swedish and Esperanto.
+
+* Conclusion
+
+The continuation-like style of programming that my library enables
+makes it possible to write relatively complex XMPP applications while
+keeping the code simple and linear.  However, incoming XMPP stanzas
+are not the only events that could be used in this way; as mentioned,
+high-level chat room events would be desirable, as would timers and
+GUI events.  The question of whether and how to unify these kinds of
+event sources requires more thought, though.
