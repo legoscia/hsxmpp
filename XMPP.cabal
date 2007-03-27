@@ -8,8 +8,10 @@ Description:	XMPP is a protocol for streaming XML, whose most widespread
 		use is instant messaging.  This library provides a monad
 		for semi-asynchronous XMPP communication.
 Exposed-Modules:    XMPP
+Other-modules:	Auth, JID, Stanzas, TCPConnection, XMLParse, XMPPConnection, XMPPMonad
 Build-depends:	base, haskell98, parsec, mtl, network
 Tested-with:	GHC
 
 Executable:	werewolf
 Main-Is:	Werewolf.hs
+Other-modules:	Translate
