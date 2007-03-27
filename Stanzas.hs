@@ -25,8 +25,12 @@ import Maybe
 
 --- Sending info requests and responses
 
+-- |Send an IQ request, returning the randomly generated ID.
 sendIq :: XMPPConnection c =>
-          String -> String -> [XMLElem] -> XMPP c String
+          String                -- ^JID of recipient
+       -> String                -- ^Type of IQ, either \"get\" or \"set\"
+       -> [XMLElem]             -- ^Payload elements
+       -> XMPP c String         -- ^ID of sent stanza
 sendIq to iqtype payload =
     do
       iqid <- liftIO $ (randomIO::IO Int)
@@ -37,15 +41,27 @@ sendIq to iqtype payload =
                      payload
       return $ show iqid
 
+-- |Send an IQ request and wait for the response, without blocking
+-- other activity.
 sendIqWait :: XMPPConnection c =>
-              String -> String -> [XMLElem] -> XMPP c XMLElem
+              String            -- ^JID of recipient
+           -> String            -- ^Type of IQ, either \"get\" or \"set\"
+           -> [XMLElem]         -- ^Payload elements
+           -> XMPP c XMLElem    -- ^Response stanza
 sendIqWait to iqtype payload =
     do
       iqid <- sendIq to iqtype payload
       waitForStanza $ (hasNodeName "iq") `conj` (attributeMatches "id" (==iqid))
 
+-- |Send a response to a received IQ stanza.
 sendIqResponse :: XMPPConnection c =>
-                  XMLElem -> String -> [XMLElem] -> XMPP c (Maybe ())
+                  XMLElem       -- ^Original stanza, from which id and
+                                -- recipient are taken
+               -> String        -- ^Type of response, either
+                                -- \"result\" or \"error\"
+               -> [XMLElem]     -- ^Payload elements
+               -> XMPP c (Maybe ()) -- ^Just () if original stanza had
+                                    -- a \"from\" attribute
 sendIqResponse inResponseTo iqtype payload =
       case getAttr "from" inResponseTo of
         Nothing ->
@@ -63,18 +79,22 @@ sendIqResponse inResponseTo iqtype payload =
 
 --- Messages
 
+-- |Return true if the message stanza has body text.
 hasBody :: StanzaPredicate
 hasBody stanza = isJust $ getMessageBody stanza
 
+-- |Get the body text of the message stanza, if any.
 getMessageBody :: XMLElem -> Maybe String
 getMessageBody stanza =
     do
       bodyTag <- xmlPath ["body"] stanza
       getCdata bodyTag
 
--- send an ordinary "chat" type message
+-- |Send an ordinary \"chat\" type message.
 sendMessage :: XMPPConnection c =>
-               String -> String -> XMPP c ()
+               String           -- ^JID of recipient
+            -> String           -- ^Text of message
+            -> XMPP c ()
 sendMessage to body =
     sendStanza $ XML "message"
                    [("to", to),
@@ -84,39 +104,51 @@ sendMessage to body =
 
 --- Presence
 
+-- |Send ordinary online presence.
 sendPresence :: XMPPConnection c => XMPP c ()
 sendPresence = sendStanza $ XML "presence" [] []
 
 --- Stanza predicates
 
--- conjunction ("and") of two predicates
+-- |Conjunction (\"and\") of two predicates.
 conj :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 conj a b = \x -> a x && b x
 
+-- |Return true if the tag has the given name.
 hasNodeName :: String -> StanzaPredicate
 hasNodeName name (XML name' _ _) = name == name'
 
 -- The three basic stanza types
+
+-- |Return true if the tag is a message stanza.
 isMessage :: StanzaPredicate
 isMessage = hasNodeName "message"
 
+-- |Return true if the tag is a presence stanza.
 isPresence :: StanzaPredicate
 isPresence = hasNodeName "presence"
 
+-- |Return true if the tag is an IQ stanza.
 isIq :: StanzaPredicate
 isIq = hasNodeName "iq"
 
+-- |Return true if the tag is a chat message.
 isChat :: StanzaPredicate
 isChat = isMessage `conj` attributeMatches "type" (=="chat")
 
-attributeMatches :: String -> (String -> Bool) -> StanzaPredicate
+-- |Apply the predicate to the named attribute.  Return false if the
+-- tag has no such attribute.
+attributeMatches :: String      -- ^Attribute name
+                 -> (String -> Bool) -- ^Attribute value predicate
+                 -> StanzaPredicate
 attributeMatches attr p (XML _ attrs _) =
     maybe False p (lookup attr attrs)
 
+-- |Return true if the stanza is from the given JID.
 isFrom :: String -> StanzaPredicate
 isFrom jid = attributeMatches "from" (==jid)
 
--- check namespace of request/response
+-- |Return true if the stanza is an IQ stanza in the given namespace.
 iqXmlns :: String -> StanzaPredicate
 iqXmlns xmlns (XML "iq" _ els) =
     case listToMaybe [x | x <- els, case x of
@@ -128,19 +160,23 @@ iqXmlns xmlns (XML "iq" _ els) =
           False
 iqXmlns _ _ = False
 
--- "get" request in given namespace
+-- |Return true if the stanza is a \"get\" request in the given namespace.
 iqGet :: String -> StanzaPredicate
 iqGet xmlns = (attributeMatches "type" (=="get")) `conj` (iqXmlns xmlns)
 
--- "set" request in given namespace
+-- |Return true if the stanza is a \"set\" request in the given namespace.
 iqSet :: String -> StanzaPredicate
 iqSet xmlns = (attributeMatches "type" (=="set")) `conj` (iqXmlns xmlns)
 
 --- Handlers for common requests
 
--- XEP-0092: Software Version
+-- |Establish a handler for answering to version requests with the
+-- given information.  See XEP-0092: Software Version.
 handleVersion :: XMPPConnection c => 
-                 String -> String -> String -> XMPP c ()
+                 String         -- ^Client name
+              -> String         -- ^Client version
+              -> String         -- ^Operating system
+              -> XMPP c ()
 handleVersion name version os =
     addHandler (iqGet "jabber:iq:version")
                (\stanza ->
