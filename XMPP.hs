@@ -1,10 +1,22 @@
-module XMPP ( module Auth
-            , module JID
+module XMPP ( -- * The XMPP monad
+              module XMPPMonad
+              -- * XML functions
+            , XMLElem(..)
+            , xmlPath
+            , getAttr
+            , getCdata
+            , xmlToString
+              -- * Stanza manipulation
             , module Stanzas
+              -- * JID functions
+            , module JID
+              -- * Authentication
+            , module Auth
+              -- * TCP connections
             , module TCPConnection
-            , module XMLParse
+              -- * Abstract connections
             , module XMPPConnection
-            , module XMPPMonad )
+            )
     where
 
 import Auth
