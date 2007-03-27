@@ -1,4 +1,4 @@
-module Werewolf where
+module Main where
 
 import XMPP
 import MUC

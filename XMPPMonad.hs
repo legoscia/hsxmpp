@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
+-- this could be {-# LANGUAGE FlexibleInstances #-}
 module XMPPMonad ( XMPP
                  , StanzaPredicate
                  , StanzaMangler

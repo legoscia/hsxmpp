@@ -1,0 +1,15 @@
+Name:		XMPP
+Version:	0.0.1
+License:	BSD3
+Author:		Magnus Henoch
+Homepage:	http://www.dtek.chalmers.se/~henoch/text/hsxmpp.html
+Synopsis:	XMPP library
+Description:	XMPP is a protocol for streaming XML, whose most widespread
+		use is instant messaging.  This library provides a monad
+		for semi-asynchronous XMPP communication.
+Exposed-Modules:    XMPP
+Build-depends:	base, haskell98, parsec, mtl, network
+Tested-with:	GHC
+
+Executable:	werewolf
+Main-Is:	Werewolf.hs
