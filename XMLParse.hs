@@ -18,10 +18,17 @@ module XMLParse
 import Text.ParserCombinators.Parsec
 import List
 
+-- |A data structure representing an XML element.
 data XMLElem = XML String [(String,String)] [XMLElem]
+             -- ^Tags have a name, a list of attributes, and a list of
+             -- child elements.
              | CData String
+               -- ^Character data just contains a string.
                deriving (Show, Eq)
 
+-- |Follow a \"path\" of named subtags in an XML tree.  For every
+-- element in the given list, find the subtag with that name and
+-- proceed recursively.
 xmlPath :: [String] -> XMLElem -> Maybe XMLElem
 xmlPath [] el = return el
 xmlPath (name:names) (XML _ _ els) =
@@ -32,15 +39,19 @@ xmlPath (name:names) (XML _ _ els) =
                         _ -> False) els
       xmlPath names el
 
+-- |Get the value of an attribute in the given tag.
 getAttr :: String -> XMLElem -> Maybe String
 getAttr attr (XML _ attrs _) = lookup attr attrs
 
+-- |Get the character data subelement of the given tag.
 getCdata :: XMLElem -> Maybe String
 getCdata (XML _ _ els) =
     case els of
       [CData s] -> Just s
       _ -> Nothing
 
+-- |Convert the tag back to XML.  If the first parameter is true,
+-- close the tag.
 xmlToString :: Bool -> XMLElem -> String
 xmlToString _ (CData s) = s
 xmlToString close (XML name attrs subels) =
