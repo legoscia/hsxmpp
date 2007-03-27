@@ -1,6 +1,6 @@
 module MUC where
 
-import XMPP
+import XMPPMonad
 import Stanzas
 import XMLParse
 import JID

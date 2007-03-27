@@ -1,6 +1,6 @@
 module Werewolf where
 
-import XMPP
+import XMPPMonad
 import Translate
 import Stanzas
 import MUC

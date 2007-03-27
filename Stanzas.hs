@@ -18,7 +18,7 @@ module Stanzas ( sendIq
                )
     where
 
-import XMPP
+import XMPPMonad
 import XMLParse
 import System.Random
 import Maybe

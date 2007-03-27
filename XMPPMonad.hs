@@ -1,16 +1,16 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
-module XMPP ( XMPP
-            , StanzaPredicate
-            , StanzaMangler
-            , StanzaHandler
-            , runXMPP
-            , sendStanza
-            , addHandler
-            , waitForStanza
-            , quit
-            , Control.Monad.State.liftIO
-            , XMPPConnection.XMPPConnection
-            )
+module XMPPMonad ( XMPP
+                 , StanzaPredicate
+                 , StanzaMangler
+                 , StanzaHandler
+                 , runXMPP
+                 , sendStanza
+                 , addHandler
+                 , waitForStanza
+                 , quit
+                 , Control.Monad.State.liftIO
+                 , XMPPConnection.XMPPConnection
+                 )
     where
 
 import Control.Monad.State

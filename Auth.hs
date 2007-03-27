@@ -1,7 +1,7 @@
 module Auth where
 
 import XMLParse
-import XMPP
+import XMPPMonad
 import Stanzas
 
 startAuth :: XMPPConnection c => 
