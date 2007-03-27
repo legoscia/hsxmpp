@@ -118,7 +118,7 @@ isFrom jid = attributeMatches "from" (==jid)
 
 -- check namespace of request/response
 iqXmlns :: String -> StanzaPredicate
-iqXmlns xmlns (XML name _ els) =
+iqXmlns xmlns (XML "iq" _ els) =
     case listToMaybe [x | x <- els, case x of
                                        XML _ _ _ -> True
                                        _ -> False] of
@@ -126,6 +126,7 @@ iqXmlns xmlns (XML name _ els) =
           attributeMatches "xmlns" (==xmlns) x
       Nothing ->
           False
+iqXmlns _ _ = False
 
 -- "get" request in given namespace
 iqGet :: String -> StanzaPredicate
