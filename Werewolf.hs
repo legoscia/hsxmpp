@@ -1,13 +1,8 @@
 module Werewolf where
 
-import XMPPMonad
-import Translate
-import Stanzas
+import XMPP
 import MUC
-import XMLParse
-import TCPConnection
-import Auth
-import JID
+import Translate
 
 import Network
 import Control.Monad

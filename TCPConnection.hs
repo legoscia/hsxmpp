@@ -1,9 +1,6 @@
 module TCPConnection ( TCPConnection
                      , openStream
                      , getStreamStart
-                     , getStanzas
-                     , sendStanza
-                     , closeConnection
                      )
     where
 
