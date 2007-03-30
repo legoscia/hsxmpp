@@ -11,6 +11,7 @@ Exposed-Modules:    XMPP
 Other-modules:	Auth, JID, Stanzas, TCPConnection, XMLParse, XMPPConnection, XMPPMonad
 Build-depends:	base, haskell98, parsec, mtl, network
 Tested-with:	GHC
+Extra-source-files:     report.txt
 
 Executable:	werewolf
 Main-Is:	Werewolf.hs
