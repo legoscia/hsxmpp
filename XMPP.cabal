@@ -1,6 +1,7 @@
 Name:		XMPP
 Version:	0.0.1
 License:	BSD3
+License-file:	COPYING
 Author:		Magnus Henoch
 Homepage:	http://www.dtek.chalmers.se/~henoch/text/hsxmpp.html
 Synopsis:	XMPP library
