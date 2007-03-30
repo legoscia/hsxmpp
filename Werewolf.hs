@@ -9,14 +9,42 @@ import Control.Monad
 import Data.HashTable
 import List
 import System.Random
+import System ( getArgs )
+import System.IO
+
+usage = "Usage: werewolf user@server [password]"
 
 main = withSocketsDo $
        do
-         c <- openStream "jabber.se"
+         args <- getArgs
+         (username, server, password) <-
+                 case args of
+                   [us, pwd] ->
+                       case break (=='@') us of
+                         (u@(_:_), ('@':s)) ->
+                             return (u, s, pwd)
+                         _ ->
+                             error usage
+                   [us] ->
+                       case break (=='@') us of
+                         (u@(_:_), ('@':s)) ->
+                             do
+                               putStr $ "Password for "++us++": "
+                               hFlush stdout
+                               hSetEcho stdin False
+                               pwd <- getLine
+                               hSetEcho stdin True
+                               return (u, s, pwd)
+                         _ ->
+                             error usage
+                   _ ->
+                       error usage
+
+         c <- openStream server
          getStreamStart c
 
          runXMPP c $ do
-           startAuth "testkanin" "jabber.se" "kanske"
+           startAuth username server password
            sendPresence
            handleVersion "Werewolf Bot" "0.1" "HaskellOS"
            werewolf
