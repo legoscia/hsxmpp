@@ -26,11 +26,10 @@ import Maybe
 --- Sending info requests and responses
 
 -- |Send an IQ request, returning the randomly generated ID.
-sendIq :: XMPPConnection c =>
-          String                -- ^JID of recipient
+sendIq :: String                -- ^JID of recipient
        -> String                -- ^Type of IQ, either \"get\" or \"set\"
        -> [XMLElem]             -- ^Payload elements
-       -> XMPP c String         -- ^ID of sent stanza
+       -> XMPP String         -- ^ID of sent stanza
 sendIq to iqtype payload =
     do
       iqid <- liftIO $ (randomIO::IO Int)
@@ -43,24 +42,22 @@ sendIq to iqtype payload =
 
 -- |Send an IQ request and wait for the response, without blocking
 -- other activity.
-sendIqWait :: XMPPConnection c =>
-              String            -- ^JID of recipient
+sendIqWait :: String            -- ^JID of recipient
            -> String            -- ^Type of IQ, either \"get\" or \"set\"
            -> [XMLElem]         -- ^Payload elements
-           -> XMPP c XMLElem    -- ^Response stanza
+           -> XMPP XMLElem      -- ^Response stanza
 sendIqWait to iqtype payload =
     do
       iqid <- sendIq to iqtype payload
       waitForStanza $ (hasNodeName "iq") `conj` (attributeMatches "id" (==iqid))
 
 -- |Send a response to a received IQ stanza.
-sendIqResponse :: XMPPConnection c =>
-                  XMLElem       -- ^Original stanza, from which id and
+sendIqResponse :: XMLElem       -- ^Original stanza, from which id and
                                 -- recipient are taken
                -> String        -- ^Type of response, either
                                 -- \"result\" or \"error\"
                -> [XMLElem]     -- ^Payload elements
-               -> XMPP c (Maybe ()) -- ^Just () if original stanza had
+               -> XMPP (Maybe ())   -- ^Just () if original stanza had
                                     -- a \"from\" attribute
 sendIqResponse inResponseTo iqtype payload =
       case getAttr "from" inResponseTo of
@@ -91,10 +88,9 @@ getMessageBody stanza =
       getCdata bodyTag
 
 -- |Send an ordinary \"chat\" type message.
-sendMessage :: XMPPConnection c =>
-               String           -- ^JID of recipient
+sendMessage :: String           -- ^JID of recipient
             -> String           -- ^Text of message
-            -> XMPP c ()
+            -> XMPP ()
 sendMessage to body =
     sendStanza $ XML "message"
                    [("to", to),
@@ -105,7 +101,7 @@ sendMessage to body =
 --- Presence
 
 -- |Send ordinary online presence.
-sendPresence :: XMPPConnection c => XMPP c ()
+sendPresence :: XMPP ()
 sendPresence = sendStanza $ XML "presence" [] []
 
 --- Stanza predicates
@@ -172,11 +168,10 @@ iqSet xmlns = (attributeMatches "type" (=="set")) `conj` (iqXmlns xmlns)
 
 -- |Establish a handler for answering to version requests with the
 -- given information.  See XEP-0092: Software Version.
-handleVersion :: XMPPConnection c => 
-                 String         -- ^Client name
+handleVersion :: String         -- ^Client name
               -> String         -- ^Client version
               -> String         -- ^Operating system
-              -> XMPP c ()
+              -> XMPP ()
 handleVersion name version os =
     addHandler (iqGet "jabber:iq:version")
                (\stanza ->

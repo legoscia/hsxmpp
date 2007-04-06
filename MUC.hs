@@ -12,8 +12,7 @@ matchesBare bare = attributeMatches "from" ((==bare).getBareJid)
 
 -- Join groupchat.  If successful, return function for participant
 -- list.
-joinGroupchat :: XMPPConnection c =>
-                 String -> String -> XMPP c (Maybe (IO [String]))
+joinGroupchat :: String -> String -> XMPP (Maybe (IO [String]))
 joinGroupchat nick room =
     do
       sendStanza $ XML "presence"
@@ -33,8 +32,7 @@ joinGroupchat nick room =
                 entries <- toList participants
                 return $ map fst entries
 
-mucPresenceHandler :: XMPPConnection c =>
-                      HashTable String () -> StanzaHandler c
+mucPresenceHandler :: HashTable String () -> StanzaHandler
 mucPresenceHandler participants stanza =
     case maybeNick of
       Nothing ->
@@ -64,8 +62,7 @@ isGroupchatPrivmsg :: String -> StanzaPredicate
 isGroupchatPrivmsg room = matchesBare room `conj` attributeMatches "type" (=="chat")
                           `conj` attributeMatches "from" ((/="") . getResource)
 
-sendGroupchatMessage :: XMPPConnection c =>
-                        String -> String -> XMPP c ()
+sendGroupchatMessage :: String -> String -> XMPP ()
 sendGroupchatMessage room body =
     sendStanza $ XML "message"
                    [("to",room),

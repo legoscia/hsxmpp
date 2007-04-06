@@ -51,8 +51,7 @@ main = withSocketsDo $
 
          closeConnection c
 
-werewolf :: XMPPConnection c =>
-            XMPP c ()
+werewolf :: XMPP ()
 werewolf = do
   addHandler (isChat `conj` hasBody) listenForJoinRequest True
 
@@ -61,8 +60,7 @@ findLanguage "sv" = loadLanguage "werewolf.txt.sv"
 findLanguage "eo" = loadLanguage "werewolf.txt.eo"
 findLanguage _ = nullLanguage
 
-listenForJoinRequest :: XMPPConnection c =>
-                        XMLElem -> XMPP c ()
+listenForJoinRequest :: XMLElem -> XMPP ()
 listenForJoinRequest msg = do
   let sender = maybe "" id (getAttr "from" msg)
       text = maybe "" id (getMessageBody msg)
@@ -154,9 +152,8 @@ beforeGame lang nick room participantList gameTable = do
       else
           beforeGame lang nick room participantList gameTable
 
-startGame :: XMPPConnection c =>
-             Language -> String -> String -> (IO [String]) ->
-             HashTable String PlayerState -> XMPP c ()
+startGame :: Language -> String -> String -> (IO [String]) ->
+             HashTable String PlayerState -> XMPP ()
 startGame lang nick room participantList gameTable = do
   entries <- liftIO $ toList gameTable
   let nicks = map fst entries
@@ -222,10 +219,9 @@ startNight lang nick room participantList werewolves villagers = do
                    sendGroupchatPrivateMessage nick room t) werewolves
           werewolvesChoosing lang nick room participantList werewolves villagers []
 
-werewolvesChoosing :: XMPPConnection c =>
-                      Language -> String -> String -> (IO [String]) ->
+werewolvesChoosing :: Language -> String -> String -> (IO [String]) ->
                       [String] -> [String] -> [(String,String)] ->
-                      XMPP c ()
+                      XMPP ()
 werewolvesChoosing lang nick room participantList werewolves villagers choices = do
   case (werewolves \\ map fst choices, nub (map snd choices)) of
     -- all werewolves have voted for the same victim.

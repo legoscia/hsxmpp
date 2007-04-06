@@ -4,8 +4,7 @@ import XMLParse
 import XMPPMonad
 import Stanzas
 
-startAuth :: XMPPConnection c => 
-             String -> String -> String -> XMPP c ()
+startAuth :: String -> String -> String -> XMPP ()
 startAuth username server password = do
   response <- sendIqWait server "get" [XML "query"
                                        [("xmlns","jabber:iq:auth")]

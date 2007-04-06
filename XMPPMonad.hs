@@ -22,21 +22,21 @@ import qualified XMPPConnection
 
 type StanzaPredicate = (XMLElem -> Bool)
 type StanzaMangler a = (XMLElem -> a)
-type StanzaHandlerPart c a = (XMLElem -> XMPP c a)
-type StanzaHandler c = StanzaHandlerPart c ()
+type StanzaHandlerPart a = (XMLElem -> XMPP a)
+type StanzaHandler = StanzaHandlerPart ()
 
-data XMPP c a = XMPPConnection c =>
-    XMPP { xmppFn :: (c -> XMPPState c -> IO (XMPPState c, XMPPRes c a)) }
-type XMPPState c = -- XMPPConnection c =>
+data XMPP a = 
+    XMPP { xmppFn :: forall c. XMPPConnection c => 
+                     (c -> XMPPState -> IO (XMPPState, XMPPRes a)) }
+type XMPPState =
     [(StanzaPredicate,          -- predicate
-      StanzaHandler c,          -- handler
+      StanzaHandler,            -- handler
       Bool)]                    -- more than once?
 
-data XMPPRes c a = XMPPConnection c =>
-                   XMPPJust a
-                 | WaitingFor StanzaPredicate (StanzaHandlerPart c a) Bool
+data XMPPRes a = XMPPJust a
+               | WaitingFor StanzaPredicate (StanzaHandlerPart a) Bool
 
-instance XMPPConnection c => Monad (XMPP c) where
+instance Monad XMPP where
     f >>= g = XMPP $
               \c state ->
                   do
@@ -50,21 +50,21 @@ instance XMPPConnection c => Monad (XMPP c) where
                                     (\stanza -> (mangler stanza) >>= g) keep)
     return a = XMPP $ \_ state -> return (state, XMPPJust a)
 
-instance XMPPConnection c => MonadState (XMPPState c) (XMPP c) where
+instance MonadState XMPPState XMPP where
     get = XMPP $ \_ state -> return (state, XMPPJust state)
     put state = XMPP $ \_ _ -> return (state, XMPPJust ())
 
-instance XMPPConnection c => MonadIO (XMPP c) where
+instance MonadIO XMPP where
     liftIO iofn = XMPP $ \c state -> do 
                         iores <- iofn
                         return (state, XMPPJust iores)
 
-initialState :: XMPPConnection c => XMPPState c
+initialState :: XMPPState
 initialState = []
 
-runXMPP :: XMPPConnection a => a -> XMPP a () -> IO ()
+runXMPP :: XMPPConnection a => a -> XMPP () -> IO ()
 runXMPP c x = runXMPP' initialState c [x]
-    where runXMPP' :: XMPPConnection a => XMPPState a -> a -> [XMPP a ()] -> IO ()
+    where runXMPP' :: XMPPConnection a => XMPPState -> a -> [XMPP ()] -> IO ()
           runXMPP' [] c [] =
               -- if there are no functions and no handlers, there is
               -- nothing left to do.
@@ -89,27 +89,27 @@ runXMPP c x = runXMPP' initialState c [x]
                 putStrLn $ show (length newStanzas) ++ " new stanzas"
                 runXMPP' s c (map actOnStanza newStanzas)
 
-sendStanza :: XMPPConnection c => XMLElem -> XMPP c ()
+sendStanza :: XMLElem -> XMPP ()
 sendStanza stanza =
     XMPP $ \c state -> do
       XMPPConnection.sendStanza c stanza
       return (state, XMPPJust ())
 
-addHandler :: XMPPConnection c => StanzaPredicate -> StanzaHandler c -> Bool -> XMPP c ()
+addHandler :: StanzaPredicate -> StanzaHandler -> Bool -> XMPP ()
 addHandler pred handler keep =
     modify ((pred, handler, keep):)
 
-waitForStanza :: XMPPConnection c => StanzaPredicate -> XMPP c XMLElem
+waitForStanza :: StanzaPredicate -> XMPP XMLElem
 waitForStanza pred =
     XMPP $ \c state -> return (state, WaitingFor pred return False)
 
-quit :: XMPPConnection c => XMPP c ()
+quit :: XMPP ()
 quit =
     -- take advantage of the feature in runXMPP, that it exits when
     -- there are no more handlers.
     put []
 
-actOnStanza :: XMPPConnection c => XMLElem -> XMPP c ()
+actOnStanza :: XMLElem -> XMPP ()
 actOnStanza stanza =
     do
       table <- get
@@ -125,9 +125,8 @@ actOnStanza stanza =
 
 -- Find handler whose predicate matches the stanza, possibly removing
 -- the entry from the table.
-findHandler :: XMPPConnection c =>
-               [(StanzaPredicate, StanzaHandler c, Bool)] -> XMLElem ->
-               Maybe ([(StanzaPredicate, StanzaHandler c, Bool)], StanzaHandler c)
+findHandler :: [(StanzaPredicate, StanzaHandler, Bool)] -> XMLElem ->
+               Maybe ([(StanzaPredicate, StanzaHandler, Bool)], StanzaHandler)
 findHandler ((pred, handler, keep):table) stanza =
     case pred stanza of
       True ->

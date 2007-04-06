@@ -77,10 +77,8 @@ current element with that name.
 
 This module contains the XMPP monad.  The XMPP monad has two purposes:
 it hides the XMPPConnection from the application code, as it is passed
-along behind the scenes (unfortunately the type signature of the monad
-is XMPPConnection c => XMPP c, which is quite ugly); and it lets the
-application code "stop and wait" for a stanza fulfilling certain
-criteria.
+along behind the scenes; and it lets the application code "stop and
+wait" for a stanza fulfilling certain criteria.
 
 The latter feature is what sets my XMPP library apart from others.
 Most libraries (including mine) allow the programmer to define
