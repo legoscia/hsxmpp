@@ -2,7 +2,6 @@
 -- this could be {-# LANGUAGE FlexibleInstances #-}
 module XMPPMonad ( XMPP
                  , StanzaPredicate
-                 , StanzaMangler
                  , StanzaHandler
                  , runXMPP
                  , sendStanza
@@ -20,7 +19,6 @@ import XMPPConnection hiding ( sendStanza )
 import qualified XMPPConnection
 
 type StanzaPredicate = (XMLElem -> Bool)
-type StanzaMangler a = (XMLElem -> a)
 type StanzaHandlerPart a = (XMLElem -> XMPP a)
 type StanzaHandler = StanzaHandlerPart ()
 
