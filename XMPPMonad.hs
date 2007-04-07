@@ -18,10 +18,13 @@ import XMLParse
 import XMPPConnection hiding ( sendStanza )
 import qualified XMPPConnection
 
+-- |A stanza predicate.
 type StanzaPredicate = (XMLElem -> Bool)
 type StanzaHandlerPart a = (XMLElem -> XMPP a)
-type StanzaHandler = StanzaHandlerPart ()
+-- |A handler function for a stanza.
+type StanzaHandler = (XMLElem -> XMPP ())
 
+-- |The XMPP monad.
 data XMPP a = 
     XMPP { xmppFn :: forall c. XMPPConnection c => 
                      (c -> XMPPState -> IO (XMPPState, XMPPRes a)) }
@@ -59,7 +62,10 @@ instance MonadIO XMPP where
 initialState :: XMPPState
 initialState = []
 
-runXMPP :: XMPPConnection a => a -> XMPP () -> IO ()
+-- |Run a function in the XMPP monad using the given XMPP connection.
+-- After that, keep looping as long as there are handlers waiting for
+-- incoming stanzas.
+runXMPP :: XMPPConnection c => c -> XMPP () -> IO ()
 runXMPP c x = runXMPP' initialState c [x]
     where runXMPP' :: XMPPConnection a => XMPPState -> a -> [XMPP ()] -> IO ()
           runXMPP' [] c [] =
@@ -86,20 +92,29 @@ runXMPP c x = runXMPP' initialState c [x]
                 putStrLn $ show (length newStanzas) ++ " new stanzas"
                 runXMPP' s c (map actOnStanza newStanzas)
 
+-- |Send an XMPP stanza.
 sendStanza :: XMLElem -> XMPP ()
 sendStanza stanza =
     XMPP $ \c state -> do
       XMPPConnection.sendStanza c stanza
       return (state, XMPPJust ())
 
-addHandler :: StanzaPredicate -> StanzaHandler -> Bool -> XMPP ()
+-- |When a stanza matching the predicate arrives, call the given
+-- handler.
+addHandler :: StanzaPredicate   -- ^Stanza predicate.
+           -> StanzaHandler     -- ^Stanza handler.
+           -> Bool              -- ^Catch more than one stanza?
+           -> XMPP ()
 addHandler pred handler keep =
     modify ((pred, handler, keep):)
 
+-- |Suspend execution of current function while waiting for a stanza
+-- matching the predicate.
 waitForStanza :: StanzaPredicate -> XMPP XMLElem
 waitForStanza pred =
     XMPP $ \c state -> return (state, WaitingFor pred return False)
 
+-- |Terminate the loop as soon as the current function exits.
 quit :: XMPP ()
 quit =
     -- take advantage of the feature in runXMPP, that it exits when
