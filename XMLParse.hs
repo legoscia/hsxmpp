@@ -1,3 +1,6 @@
+-- |The difference between this XML parsers and all other XML parsers
+-- is that this one can parse an XML document that is only partially
+-- received, returning the parts that have arrived so far.
 module XMLParse 
     ( XMLElem(..)
     , xmlPath
