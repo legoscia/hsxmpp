@@ -43,13 +43,19 @@ instance XMPPConnection TCPConnection where
         hClose h
 
 parseBuffered :: TCPConnection -> Parser a -> IO a
-parseBuffered (TCPConnection h bufvar) parser = do
+parseBuffered c@(TCPConnection h bufvar) parser = do
   buffer <- readIORef bufvar
   input <- getString h
   putStrLn $ "got '" ++ buffer ++ input ++ "'"
-  let Right (result, rest) = parse (getRest parser) "" (buffer++input)
-  writeIORef bufvar rest
-  return result
+  case parse (getRest parser) "" (buffer++input) of
+    Right (result, rest) ->
+        do
+          writeIORef bufvar rest
+          return result
+    Left e ->
+        do
+          putStrLn $ "An error?  Hopefully doesn't matter.\n"++(show e)
+          parseBuffered c parser
 
 getString :: Handle -> IO String
 getString h =
