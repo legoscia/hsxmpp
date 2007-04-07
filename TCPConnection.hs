@@ -7,6 +7,7 @@ module TCPConnection ( TCPConnection
 import Network
 import System.IO
 import Data.IORef
+import Control.Monad
 
 import XMLParse
 import XMPPConnection
@@ -53,10 +54,11 @@ parseBuffered (TCPConnection h bufvar) parser = do
 getString :: Handle -> IO String
 getString h =
     do
-      hasInput <- hWaitForInput h 1000
-      if hasInput then
-          do c <- hGetChar h
-             cs <- getString h
-             return (c:cs)
-          else
-              return []
+      hWaitForInput h (-1)
+      getEverything
+    where getEverything =
+              do
+                r <- hReady h
+                if r
+                  then liftM2 (:) (hGetChar h) getEverything
+                  else return []
