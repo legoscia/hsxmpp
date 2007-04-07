@@ -1,8 +1,13 @@
-This document is a placeholder until I find time and inspiration to
-write something more informative about hsXMPP and the werewolf bot,
-and bring it into compliance with received practice of packaging a
-Haskell library.  report.txt is the most comprehensive documentation
-there is.
+This is an XMPP library for Haskell.  Build it with:
+
+  runhaskell Setup.hs configure
+  runhaskell Setup.hs build
+
+Build the documentation with:
+
+  runhaskell Setup.hs haddock
+
+The documentation is also available on the web page.
 
 http://www.dtek.chalmers.se/~henoch/text/hsxmpp.html
 http://www.dtek.chalmers.se/~henoch/darcs/hsxmpp/
