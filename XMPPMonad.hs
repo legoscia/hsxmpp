@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 -- this could be {-# LANGUAGE FlexibleInstances #-}
 module XMPPMonad ( XMPP
-                 , StanzaPredicate
-                 , StanzaHandler
                  , runXMPP
                  , sendStanza
                  , addHandler
                  , waitForStanza
                  , quit
+                 , StanzaPredicate
+                 , StanzaHandler
                  , Control.Monad.State.liftIO
                  )
     where
@@ -24,7 +24,10 @@ type StanzaHandlerPart a = (XMLElem -> XMPP a)
 -- |A handler function for a stanza.
 type StanzaHandler = (XMLElem -> XMPP ())
 
--- |The XMPP monad.
+-- |A function in the XMPP monad behaves a bit like a thread in a
+-- cooperative threading system: when it decides to wait for more
+-- input, it \"sleeps\", letting other \"threads\" run, until input
+-- matching a certain predicate arrives.
 data XMPP a = 
     XMPP { xmppFn :: XMPPConnection c => 
                      (c -> XMPPState -> IO (XMPPState, XMPPRes a)) }
@@ -74,6 +77,7 @@ runXMPP c x = runXMPP' initialState c [x] []
               return ()
           runXMPP' s c (x:xs) stanzas =
               -- if we have functions waiting to be run, run the first of them
+              -- (actually, the list will always contain 0 or 1 element)
               do
                 (s', result) <- xmppFn x c s
                 let s'' = (case result of
@@ -103,7 +107,11 @@ sendStanza stanza =
       return (state, XMPPJust ())
 
 -- |When a stanza matching the predicate arrives, call the given
--- handler.
+-- handler.  This is analogous to spawning a new thread, except that
+-- the \"thread\" is only run if and when a matching stanza arrives.
+--
+-- Stanza handlers can be one-shot or permanent, as indicated by the
+-- third argument.
 addHandler :: StanzaPredicate   -- ^Stanza predicate.
            -> StanzaHandler     -- ^Stanza handler.
            -> Bool              -- ^Catch more than one stanza?
@@ -117,11 +125,10 @@ waitForStanza :: StanzaPredicate -> XMPP XMLElem
 waitForStanza pred =
     XMPP $ \c state -> return (state, WaitingFor pred return False)
 
--- |Terminate the loop as soon as the current function exits.
+-- |Terminate the loop as soon as the current function exits.  This
+-- works by removing all stanza handlers, which makes 'runXMPP' exit.
 quit :: XMPP ()
 quit =
-    -- take advantage of the feature in runXMPP, that it exits when
-    -- there are no more handlers.
     put []
 
 actOnStanza :: XMLElem -> XMPP ()
