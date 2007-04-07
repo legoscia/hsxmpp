@@ -66,13 +66,13 @@ initialState = []
 -- After that, keep looping as long as there are handlers waiting for
 -- incoming stanzas.
 runXMPP :: XMPPConnection c => c -> XMPP () -> IO ()
-runXMPP c x = runXMPP' initialState c [x]
-    where runXMPP' :: XMPPConnection a => XMPPState -> a -> [XMPP ()] -> IO ()
-          runXMPP' [] c [] =
+runXMPP c x = runXMPP' initialState c [x] []
+    where runXMPP' :: XMPPConnection c => XMPPState -> c -> [XMPP ()] -> [XMLElem] -> IO ()
+          runXMPP' [] c [] _ =
               -- if there are no functions and no handlers, there is
               -- nothing left to do.
               return ()
-          runXMPP' s c (x:xs) =
+          runXMPP' s c (x:xs) stanzas =
               -- if we have functions waiting to be run, run the first of them
               do
                 (s', result) <- xmppFn x c s
@@ -82,15 +82,18 @@ runXMPP c x = runXMPP' initialState c [x]
                             WaitingFor pred mangler keep ->
                                 (pred,mangler,keep):s'
                           )
-                runXMPP' s'' c xs
-          runXMPP' s c [] =
+                runXMPP' s'' c xs stanzas
+          runXMPP' s c [] (stanza:stanzas) =
+              -- if there are unprocessed stanzas, process the first of them
+              runXMPP' s c [actOnStanza stanza] stanzas
+          runXMPP' s c [] [] =
               -- if there are no more functions to run, but there are
               -- handlers left, wait for incoming stanzas
               do
                 putStrLn $ show (length s) ++ " handlers left"
                 newStanzas <- getStanzas c
                 putStrLn $ show (length newStanzas) ++ " new stanzas"
-                runXMPP' s c (map actOnStanza newStanzas)
+                runXMPP' s c [] newStanzas
 
 -- |Send an XMPP stanza.
 sendStanza :: XMLElem -> XMPP ()
