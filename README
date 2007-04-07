@@ -9,6 +9,16 @@ Build the documentation with:
 
 The documentation is also available on the web page.
 
+This distribution also contains a werewolf bot, which plays a silly
+game with chat room participants.  Create a Jabber account for it, and
+run it with:
+
+  werewolf user@example.com
+
+Then you can talk it into entering a chat room and playing the game;
+the bot is designed to be self-documenting.  At least four players are
+needed.
+
 http://www.dtek.chalmers.se/~henoch/text/hsxmpp.html
 http://www.dtek.chalmers.se/~henoch/darcs/hsxmpp/
 mailto:henoch@dtek.chalmers.se
