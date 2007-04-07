@@ -12,8 +12,11 @@ import Control.Monad
 import XMLParse
 import XMPPConnection
 
+-- |An XMPP connection over TCP.
 data TCPConnection = TCPConnection Handle (IORef String)
 
+-- |Open a TCP connection to the named server, port 5222, and send a
+-- stream header.  This should really check SRV records.
 openStream :: String -> IO TCPConnection
 openStream server =
     do
@@ -28,6 +31,8 @@ openStream server =
       buffer <- newIORef ""
       return $ TCPConnection h buffer
 
+-- |Get the stream header that the server sent.  This needs to be
+-- called before doing anything else with the stream.
 getStreamStart :: TCPConnection -> IO XMLElem
 getStreamStart c =
     parseBuffered c xmppStreamStart

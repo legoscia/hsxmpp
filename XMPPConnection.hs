@@ -2,7 +2,11 @@ module XMPPConnection (XMPPConnection(..)) where
 
 import XMLParse
 
-class XMPPConnection a where
-    getStanzas :: a -> IO [XMLElem]
-    sendStanza :: a -> XMLElem -> IO ()
-    closeConnection :: a -> IO ()
+-- |A class for various kinds of XMPP connections.
+class XMPPConnection c where
+    -- |Get incoming stanzas from the connection.
+    getStanzas :: c -> IO [XMLElem]
+    -- |Send a stanza on the connection.
+    sendStanza :: c -> XMLElem -> IO ()
+    -- |Close the connection.
+    closeConnection :: c -> IO ()
