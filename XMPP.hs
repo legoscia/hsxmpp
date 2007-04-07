@@ -25,4 +25,4 @@ import Stanzas
 import TCPConnection
 import XMLParse
 import XMPPConnection hiding ( sendStanza )
-import XMPPMonad hiding ( XMPPConnection )
+import XMPPMonad

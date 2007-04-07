@@ -10,7 +10,6 @@ module XMPPMonad ( XMPP
                  , waitForStanza
                  , quit
                  , Control.Monad.State.liftIO
-                 , XMPPConnection.XMPPConnection
                  )
     where
 
