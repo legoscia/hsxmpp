@@ -26,7 +26,7 @@ type StanzaHandler = (XMLElem -> XMPP ())
 
 -- |The XMPP monad.
 data XMPP a = 
-    XMPP { xmppFn :: forall c. XMPPConnection c => 
+    XMPP { xmppFn :: XMPPConnection c => 
                      (c -> XMPPState -> IO (XMPPState, XMPPRes a)) }
 type XMPPState =
     [(StanzaPredicate,          -- predicate
