@@ -53,9 +53,13 @@ instance Monad XMPP where
                                     (\stanza -> (mangler stanza) >>= g) keep)
     return a = XMPP $ \_ state -> return (state, XMPPJust a)
 
-instance MonadState XMPPState XMPP where
-    get = XMPP $ \_ state -> return (state, XMPPJust state)
-    put state = XMPP $ \_ _ -> return (state, XMPPJust ())
+-- This used to use MonadState, but there is no point.
+getState :: XMPP XMPPState
+getState = XMPP $ \_ state -> return (state, XMPPJust state)
+putState :: XMPPState -> XMPP ()
+putState state = XMPP $ \_ _ -> return (state, XMPPJust ())
+modifyState :: (XMPPState -> XMPPState) -> XMPP ()
+modifyState fn = XMPP $ \_ state -> return (fn state, XMPPJust ())
 
 instance MonadIO XMPP where
     liftIO iofn = XMPP $ \c state -> do 
@@ -117,7 +121,7 @@ addHandler :: StanzaPredicate   -- ^Stanza predicate.
            -> Bool              -- ^Catch more than one stanza?
            -> XMPP ()
 addHandler pred handler keep =
-    modify ((pred, handler, keep):)
+    modifyState ((pred, handler, keep):)
 
 -- |Suspend execution of current function while waiting for a stanza
 -- matching the predicate.
@@ -129,17 +133,17 @@ waitForStanza pred =
 -- works by removing all stanza handlers, which makes 'runXMPP' exit.
 quit :: XMPP ()
 quit =
-    put []
+    putState []
 
 actOnStanza :: XMLElem -> XMPP ()
 actOnStanza stanza =
     do
-      table <- get
+      table <- getState
       liftIO $ putStrLn $ "checking " ++ show (length table) ++ " active handlers"
       case findHandler table stanza of
         Just (table', handler) ->
             do
-              put table'
+              putState table'
               liftIO $ putStrLn $ show (length table') ++ " handlers left"
               handler stanza
         Nothing ->
