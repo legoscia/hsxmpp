@@ -10,7 +10,7 @@ Description:	XMPP is a protocol for streaming XML, whose most widespread
 		for semi-asynchronous XMPP communication.
 Exposed-Modules:    XMPP, MUC
 Other-modules:	Auth, JID, Stanzas, TCPConnection, XMLParse, XMPPConnection, XMPPMonad
-Build-depends:	base, haskell98, parsec, mtl, network
+Build-depends:	base, haskell98, parsec, mtl, network, random
 Tested-with:	GHC
 Extra-source-files:     README report.txt werewolf.txt.en werewolf.txt.eo werewolf.txt.sv
 
